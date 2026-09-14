@@ -3,7 +3,7 @@ package com.RadioManagement.RadioManagement.DTO;
 public class AuthRegRequest {
     String username;
     String password;
-    String Role;
+    String role;
 
     public String getUsername() {
         return username;
@@ -22,10 +22,10 @@ public class AuthRegRequest {
     }
 
     public String getRole() {
-        return Role;
+        return role;
     }
 
     public void setRole(String role) {
-        Role = role;
+        role = role;
     }
 }
