@@ -23,12 +23,19 @@ import java.util.stream.Collectors;
 @RequestMapping("/channel")
 public class RadioController {
 
-    @Autowired
-    UserRepository userRepository;
-    @Autowired
-    RadioChannelRepository radioChannelRepository;
-    @Autowired
-    RadioProgramRepository radioProgramRepository;
+    private final RadioChannelRepository radioChannelRepository;
+    private final RadioProgramRepository radioProgramRepository;
+    private final UserRepository userRepository;
+
+    public RadioController(
+            RadioChannelRepository radioChannelRepository,
+            RadioProgramRepository radioProgramRepository,
+            UserRepository userRepository) {
+
+        this.radioChannelRepository = radioChannelRepository;
+        this.radioProgramRepository = radioProgramRepository;
+        this.userRepository = userRepository;
+    }
 
     //post addchannel
     @PostMapping("/add")
@@ -50,16 +57,17 @@ public class RadioController {
     public ResponseEntity<?> getChannels(){
         List<RadioChannel> channels = new ArrayList<>();
         channels=radioChannelRepository.findAll();
-            return (channels.isEmpty())?ResponseEntity.badRequest().body("Not exists"):ResponseEntity.ok(channels.stream().collect(Collectors.toList()));
-    }
+        return ResponseEntity.ok(channels);
+        }
 
     //GET /channel/search?query=TEXT
     @GetMapping("/search")
     public ResponseEntity<?> search(@RequestParam("query") String query){
         List<RadioChannel> channels= new ArrayList<>();
         channels=radioChannelRepository.findByNameContainingIgnoreCaseOrGenreContainingIgnoreCase(query,query);
-        return (channels.isEmpty())?ResponseEntity.badRequest().body("Not exists"):ResponseEntity.ok(channels);
+        return ResponseEntity.ok(channels);
     }
+
 
     //PUT /channel/batch-update-frequency
     @PutMapping("/batch-update-frequency")
@@ -69,7 +77,7 @@ public class RadioController {
             RadioChannel channel = radio.get();
             channel.setFrequency(updateFreqRequest.getNewFrequency());
             radioChannelRepository.save(channel);
-            return ResponseEntity.status(201).body("Updated");
+            return ResponseEntity.ok("Updated");
         }else{
             return ResponseEntity.badRequest().body("No Channel with this id");
         }
@@ -105,6 +113,6 @@ public class RadioController {
     public ResponseEntity<?> getPrograms(@RequestParam("id") Integer id){
 
         List<RadioProgram> program = radioProgramRepository.findByChannelId(id);
-        return(program.isEmpty())?ResponseEntity.badRequest().body("Not exists"):ResponseEntity.status(201).body(program);
+        return ResponseEntity.ok(program);
     }
 }

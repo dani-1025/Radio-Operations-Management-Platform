@@ -9,8 +9,12 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class AppRunner implements ApplicationRunner {
-    @Autowired
-    UserRepository userRepo;
+
+    private final UserRepository userRepo;
+
+    public AppRunner(UserRepository userRepository) {
+        this.userRepo = userRepository;
+    }
 
     @Override
     public void run(ApplicationArguments args) throws Exception {

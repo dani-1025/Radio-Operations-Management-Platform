@@ -12,8 +12,11 @@ import java.util.Optional;
 @Service
 public class UserDetailsServices implements UserDetailsService, UserDetailsPasswordService {
 
-    @Autowired
-    UserRepository userRepository;
+    private final UserRepository userRepository;
+
+    public UserDetailsServices(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
     @Override
     public UserDetails updatePassword(UserDetails user, @Nullable String newPassword) {
         return null;
