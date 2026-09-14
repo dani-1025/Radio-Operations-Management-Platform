@@ -1,8 +1,11 @@
 package com.RadioManagement.RadioManagement.DTO;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class AuthRegRequest {
     String username;
     String password;
+    @JsonProperty("role")
     String role;
 
     public String getUsername() {
@@ -26,6 +29,6 @@ public class AuthRegRequest {
     }
 
     public void setRole(String role) {
-        role = role;
+        this.role = role;
     }
 }
