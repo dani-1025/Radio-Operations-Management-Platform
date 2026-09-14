@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,6 +31,8 @@ public class AuthContoller {
     JwtUtil jwtUtil;
     @Autowired
     UserRepository userRepository;
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest authRequest){
@@ -54,7 +57,7 @@ public class AuthContoller {
        String role= authRegRequest.getRole();
        AppUser appUser= new AppUser();
         appUser.setUsername(user);
-        appUser.setPassword(pass);
+        appUser.setPassword(passwordEncoder.encode(pass));
         appUser.setRole(role);
         userRepository.save(appUser);
         return ResponseEntity.status(201).body("User registered succesfully");
