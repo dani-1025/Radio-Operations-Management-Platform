@@ -55,6 +55,16 @@ public class SecurityConfig {
                 .sessionManagement(sess->sess.sessionCreationPolicy((SessionCreationPolicy.STATELESS)))
                 .authorizeHttpRequests(auth->auth
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers(
+                                "/channel/add",
+                                "/channel/update-frequency",
+                                "/program/add"
+                        ).hasRole("ADMIN")
+                        .requestMatchers(
+                                "/channel/list",
+                                "/channel/search",
+                                "/program/list"
+                        ).hasAnyRole("ADMIN", "MEMBER")
                         .anyRequest().authenticated()
                 );
         http.headers(head->head.frameOptions(fr->fr.sameOrigin()));
