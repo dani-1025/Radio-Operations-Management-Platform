@@ -54,8 +54,8 @@ public class AuthContoller {
        String role= authRegRequest.getRole();
        AppUser appUser= new AppUser();
         appUser.setUsername(user);
-        appUser.setUsername(user);
-        appUser.setUsername(user);
+        appUser.setPassword(pass);
+        appUser.setRole(role);
         userRepository.save(appUser);
         return ResponseEntity.status(201).body("User registered succesfully");
     }
