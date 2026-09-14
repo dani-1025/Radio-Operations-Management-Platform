@@ -4,6 +4,7 @@ import com.RadioManagement.RadioManagement.DTO.AuthRegRequest;
 import com.RadioManagement.RadioManagement.DTO.AuthRequest;
 import com.RadioManagement.RadioManagement.DTO.AuthResponse;
 import com.RadioManagement.RadioManagement.Service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,7 +30,7 @@ public class AuthContoller {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody AuthRegRequest authRegRequest) {
+    public ResponseEntity<?> register(@Valid  @RequestBody AuthRegRequest authRegRequest) {
         authService.register(authRegRequest);
         return ResponseEntity.status(201).body("User registered succesfully");
     }
