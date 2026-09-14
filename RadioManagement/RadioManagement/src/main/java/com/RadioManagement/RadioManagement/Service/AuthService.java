@@ -4,6 +4,7 @@ import com.RadioManagement.RadioManagement.DTO.AuthRegRequest;
 import com.RadioManagement.RadioManagement.DTO.AuthRequest;
 import com.RadioManagement.RadioManagement.DTO.AuthResponse;
 import com.RadioManagement.RadioManagement.Entity.AppUser;
+import com.RadioManagement.RadioManagement.Exception.UserAlreadyExistsException;
 import com.RadioManagement.RadioManagement.Repository.UserRepository;
 import com.RadioManagement.RadioManagement.Security.JwtUtil;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -54,7 +55,7 @@ public class AuthService {
     public void register(AuthRegRequest authRegRequest) {
 
         if (userRepository.findByUsername(authRegRequest.getUsername()).isPresent()) {
-            throw new RuntimeException("User Exists");
+            throw new UserAlreadyExistsException("User already exists");
         }
 
         AppUser appUser = new AppUser();
