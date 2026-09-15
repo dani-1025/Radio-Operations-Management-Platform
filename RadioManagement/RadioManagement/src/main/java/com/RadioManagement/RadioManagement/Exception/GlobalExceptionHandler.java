@@ -46,4 +46,28 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(response);
     }
+
+    @ExceptionHandler(ChannelNotFoundException.class)
+    public ResponseEntity<?> handleChannelNotFound(
+            ChannelNotFoundException exception) {
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", 404);
+        response.put("message", exception.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(response);
+    }
+
+    @ExceptionHandler(DuplicateChannelException.class)
+    public ResponseEntity<?> handleDuplicateChannel(
+            DuplicateChannelException exception) {
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", 409);
+        response.put("message", exception.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(response);
+    }
 }
