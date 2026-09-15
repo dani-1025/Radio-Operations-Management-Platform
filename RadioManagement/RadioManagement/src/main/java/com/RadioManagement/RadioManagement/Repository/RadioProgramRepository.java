@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface RadioProgramRepository  extends JpaRepository<RadioProgram,Integer> {
-    List<RadioProgram> findByChannelId(Integer channelId);
+public interface RadioProgramRepository  extends JpaRepository<RadioProgram,Long> {
+    List<RadioProgram> findByChannelId(Long channelId);
 }

@@ -3,7 +3,7 @@ package com.RadioManagement.RadioManagement.DTO;
 public class AddProgramRequest {
     private String title;
     private String description;
-    private Integer channelId;
+    private Long channelId;
 
     public String getTitle() {
         return title;
@@ -21,11 +21,11 @@ public class AddProgramRequest {
         this.description = description;
     }
 
-    public Integer getChannelId() {
+    public Long getChannelId() {
         return channelId;
     }
 
-    public void setChannelId(Integer channelId) {
+    public void setChannelId(Long channelId) {
         this.channelId = channelId;
     }
 }

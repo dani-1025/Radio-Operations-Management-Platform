@@ -110,7 +110,7 @@ public class RadioController {
 
     // GET /program/list-by-channel/{channelId}
     @GetMapping("/program/listby")
-    public ResponseEntity<?> getPrograms(@RequestParam("id") Integer id){
+    public ResponseEntity<?> getPrograms(@RequestParam("id") Long id){
 
         List<RadioProgram> program = radioProgramRepository.findByChannelId(id);
         return ResponseEntity.ok(program);
