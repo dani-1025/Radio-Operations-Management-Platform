@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface RadioChannelRepository  extends JpaRepository<RadioChannel,Integer> {
+public interface RadioChannelRepository extends JpaRepository<RadioChannel, Long> {
     List<RadioChannel> findByNameContainingIgnoreCaseOrGenreContainingIgnoreCase(String name,String genre);
 }
