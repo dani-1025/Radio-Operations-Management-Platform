@@ -10,7 +10,9 @@ import com.RadioManagement.RadioManagement.Exception.ChannelNotFoundException;
 import com.RadioManagement.RadioManagement.Exception.DuplicateChannelException;
 import com.RadioManagement.RadioManagement.Repository.RadioChannelRepository;
 import com.RadioManagement.RadioManagement.Repository.RadioProgramRepository;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +32,7 @@ public class RadioChannelService {
     }
 
     // Add channel
+    @CacheEvict(value = {"channels", "channelSearch"}, allEntries = true)
     public void addChannel(AddChannelRequest request) {
 
         if (radioChannelRepository.findByName(request.getName()).isPresent()) {
@@ -47,17 +50,20 @@ public class RadioChannelService {
     }
 
     // Get all channels
+    @Cacheable("channels")
     public List<RadioChannel> getChannels() {
         return radioChannelRepository.findAll();
     }
 
     // Search channels
+    @Cacheable(value = "channelSearch", key = "#query.toLowerCase()")
     public List<RadioChannel> searchChannels(String query) {
         return radioChannelRepository
                 .findByNameContainingIgnoreCaseOrGenreContainingIgnoreCase(query, query);
     }
 
     // Update channel frequency
+    @CacheEvict(value = {"channels", "channelSearch"}, allEntries = true)
     public void updateFrequency(UpdateFreqRequest request) {
         Optional<RadioChannel> radio =
                 radioChannelRepository.findById(request.getId());
