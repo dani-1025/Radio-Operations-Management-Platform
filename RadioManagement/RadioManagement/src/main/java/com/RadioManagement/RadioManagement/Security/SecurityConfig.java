@@ -61,14 +61,15 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers(
                                 "/channel/add",
-                                "/channel/update-frequency",
-                                "/program/add"
+                                "/channel/batch-update-frequency",
+                                "/channel/program/add"
                         ).hasRole("ADMIN")
                         .requestMatchers(
                                 "/channel/list",
                                 "/channel/search",
-                                "/program/list"
+                                "/channel/program/listby"
                         ).hasAnyRole("ADMIN", "MEMBER")
+
                         .anyRequest().authenticated()
                 );
         http.headers(head->head.frameOptions(fr->fr.sameOrigin()));
