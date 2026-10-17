@@ -6,6 +6,9 @@ import com.RadioManagement.RadioManagement.Entity.RadioChannel;
 import com.RadioManagement.RadioManagement.Exception.DuplicateChannelException;
 import com.RadioManagement.RadioManagement.Repository.RadioChannelRepository;
 import com.RadioManagement.RadioManagement.Repository.RadioProgramRepository;
+import com.RadioManagement.RadioManagement.DTO.UpdateFreqRequest;
+import com.RadioManagement.RadioManagement.DTO.AddProgramRequest;
+import com.RadioManagement.RadioManagement.Exception.ChannelNotFoundException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -63,4 +66,61 @@ class RadioChannelServiceTest {
 
         verify(radioChannelRepository, never()).save(any(RadioChannel.class));
     }
+
+
+    @Test
+    void updateFrequency_whenChannelDoesNotExist_throwsException() {
+        UpdateFreqRequest request = new UpdateFreqRequest();
+        request.setId(999L);
+        request.setNewFrequency(101.5);
+
+        when(radioChannelRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ChannelNotFoundException.class,
+                () -> radioChannelService.updateFrequency(request)
+        );
+
+        verify(radioChannelRepository, never()).save(any(RadioChannel.class));
+    }
+
+    @Test
+    void updateFrequency_whenChannelExists_savesUpdatedChannel() {
+        RadioChannel channel = new RadioChannel();
+        channel.setFrequency(98.6);
+
+        UpdateFreqRequest request = new UpdateFreqRequest();
+        request.setId(1L);
+        request.setNewFrequency(101.5);
+
+        when(radioChannelRepository.findById(1L))
+                .thenReturn(Optional.of(channel));
+
+        radioChannelService.updateFrequency(request);
+
+        verify(radioChannelRepository).save(channel);
+        org.junit.jupiter.api.Assertions.assertEquals(
+                101.5, channel.getFrequency(), 0.001
+        );
+    }
+
+    @Test
+    void addProgram_whenChannelDoesNotExist_throwsException() {
+        AddProgramRequest request = new AddProgramRequest();
+        request.setChannelId(999L);
+        request.setTitle("Morning Show");
+        request.setDescription("Morning music and news");
+
+        when(radioChannelRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ChannelNotFoundException.class,
+                () -> radioChannelService.addProgram(request)
+        );
+
+        verify(radioProgramRepository, never()).save(any());
+    }
+
 }
