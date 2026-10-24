@@ -13,7 +13,8 @@ import com.RadioManagement.RadioManagement.Repository.RadioProgramRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
-
+import com.RadioManagement.RadioManagement.Event.ChannelCreatedEvent;
+import org.springframework.kafka.core.KafkaTemplate;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,13 +23,16 @@ public class RadioChannelService {
 
     private final RadioChannelRepository radioChannelRepository;
     private final RadioProgramRepository radioProgramRepository;
+    private final KafkaTemplate<String, ChannelCreatedEvent> kafkaTemplate;
 
     public RadioChannelService(
             RadioChannelRepository radioChannelRepository,
-            RadioProgramRepository radioProgramRepository) {
+            RadioProgramRepository radioProgramRepository,
+            KafkaTemplate<String, ChannelCreatedEvent> kafkaTemplate) {
 
         this.radioChannelRepository = radioChannelRepository;
         this.radioProgramRepository = radioProgramRepository;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     // Add channel
@@ -46,7 +50,16 @@ public class RadioChannelService {
         channel.setName(request.getName());
         channel.setFrequency(request.getFrequency());
 
-        radioChannelRepository.save(channel);
+        RadioChannel savedChannel = radioChannelRepository.save(channel);
+
+        ChannelCreatedEvent event = new ChannelCreatedEvent(
+                savedChannel.getId(),
+                savedChannel.getName(),
+                savedChannel.getGenre(),
+                savedChannel.getFrequency()
+        );
+
+        kafkaTemplate.send("radio.channel.created", event);
     }
 
     // Get all channels
