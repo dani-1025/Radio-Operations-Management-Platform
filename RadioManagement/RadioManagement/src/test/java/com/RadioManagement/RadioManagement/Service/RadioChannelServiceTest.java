@@ -2,23 +2,25 @@
 package com.RadioManagement.RadioManagement.Service;
 
 import com.RadioManagement.RadioManagement.DTO.AddChannelRequest;
+import com.RadioManagement.RadioManagement.DTO.AddProgramRequest;
+import com.RadioManagement.RadioManagement.DTO.UpdateFreqRequest;
 import com.RadioManagement.RadioManagement.Entity.RadioChannel;
+import com.RadioManagement.RadioManagement.Event.ChannelCreatedEvent;
+import com.RadioManagement.RadioManagement.Exception.ChannelNotFoundException;
 import com.RadioManagement.RadioManagement.Exception.DuplicateChannelException;
 import com.RadioManagement.RadioManagement.Repository.RadioChannelRepository;
 import com.RadioManagement.RadioManagement.Repository.RadioProgramRepository;
-import com.RadioManagement.RadioManagement.DTO.UpdateFreqRequest;
-import com.RadioManagement.RadioManagement.DTO.AddProgramRequest;
-import com.RadioManagement.RadioManagement.Exception.ChannelNotFoundException;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -30,6 +32,9 @@ class RadioChannelServiceTest {
 
     @Mock
     private RadioProgramRepository radioProgramRepository;
+
+    @Mock
+    private KafkaTemplate<String, ChannelCreatedEvent> kafkaTemplate;
 
     @InjectMocks
     private RadioChannelService radioChannelService;
@@ -44,9 +49,20 @@ class RadioChannelServiceTest {
         when(radioChannelRepository.findByName("Blue FM"))
                 .thenReturn(Optional.empty());
 
+        when(radioChannelRepository.save(any(RadioChannel.class)))
+                .thenAnswer(invocation -> {
+                    RadioChannel saved = invocation.getArgument(0);
+                    saved.setId(1L);
+                    return saved;
+                });
+
         radioChannelService.addChannel(request);
 
         verify(radioChannelRepository).save(any(RadioChannel.class));
+        verify(kafkaTemplate).send(
+                eq("radio.channel.created"),
+                any(ChannelCreatedEvent.class)
+        );
     }
 
     @Test
@@ -65,8 +81,8 @@ class RadioChannelServiceTest {
         );
 
         verify(radioChannelRepository, never()).save(any(RadioChannel.class));
+        verifyNoInteractions(kafkaTemplate);
     }
-
 
     @Test
     void updateFrequency_whenChannelDoesNotExist_throwsException() {
@@ -100,9 +116,7 @@ class RadioChannelServiceTest {
         radioChannelService.updateFrequency(request);
 
         verify(radioChannelRepository).save(channel);
-        org.junit.jupiter.api.Assertions.assertEquals(
-                101.5, channel.getFrequency(), 0.001
-        );
+        assertEquals(101.5, channel.getFrequency(), 0.001);
     }
 
     @Test
@@ -122,5 +136,4 @@ class RadioChannelServiceTest {
 
         verify(radioProgramRepository, never()).save(any());
     }
-
 }
