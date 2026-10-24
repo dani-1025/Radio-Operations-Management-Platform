@@ -1,9 +1,11 @@
+
 package com.RadioManagement.RadioManagement.Config;
 
 import com.RadioManagement.RadioManagement.Event.ChannelCreatedEvent;
 
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
@@ -16,8 +18,11 @@ import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.support.serializer.JacksonJsonSerializer;
 import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
+import org.springframework.util.backoff.FixedBackOff;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,23 +34,11 @@ public class KafkaConfig {
     // Kafka Producer
     @Bean
     public ProducerFactory<String, ChannelCreatedEvent> producerFactory() {
-
         Map<String, Object> config = new HashMap<>();
 
-        config.put(
-                ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                "localhost:9092"
-        );
-
-        config.put(
-                ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-                StringSerializer.class
-        );
-
-        config.put(
-                ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-                JacksonJsonSerializer.class
-        );
+        config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JacksonJsonSerializer.class);
 
         return new DefaultKafkaProducerFactory<>(config);
     }
@@ -54,30 +47,17 @@ public class KafkaConfig {
     @Bean
     public KafkaTemplate<String, ChannelCreatedEvent> kafkaTemplate(
             ProducerFactory<String, ChannelCreatedEvent> producerFactory) {
-
         return new KafkaTemplate<>(producerFactory);
     }
 
     // Kafka Consumer
     @Bean
     public ConsumerFactory<String, ChannelCreatedEvent> consumerFactory() {
-
         Map<String, Object> config = new HashMap<>();
 
-        config.put(
-                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                "localhost:9092"
-        );
-
-        config.put(
-                ConsumerConfig.GROUP_ID_CONFIG,
-                "radio-operations-group"
-        );
-
-        config.put(
-                ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,
-                "earliest"
-        );
+        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, "radio-operations-group");
+        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         return new DefaultKafkaConsumerFactory<>(
                 config,
@@ -86,16 +66,39 @@ public class KafkaConfig {
         );
     }
 
+    // Retry and dead-letter handling
+    @Bean
+    public DefaultErrorHandler kafkaErrorHandler(
+            KafkaTemplate<String, ChannelCreatedEvent> kafkaTemplate) {
+
+        DeadLetterPublishingRecoverer recoverer =
+                new DeadLetterPublishingRecoverer(
+                        kafkaTemplate,
+                        (record, exception) ->
+                                new TopicPartition(
+                                        record.topic() + ".DLT",
+                                        record.partition()
+                                )
+                );
+
+        return new DefaultErrorHandler(
+                recoverer,
+                new FixedBackOff(1000L, 2L)
+        );
+    }
+
     // Kafka Listener Container
     @Bean(name = "kafkaListenerContainerFactory")
     public ConcurrentKafkaListenerContainerFactory<String, ChannelCreatedEvent>
     kafkaListenerContainerFactory(
-            ConsumerFactory<String, ChannelCreatedEvent> consumerFactory) {
+            ConsumerFactory<String, ChannelCreatedEvent> consumerFactory,
+            DefaultErrorHandler kafkaErrorHandler) {
 
-        ConcurrentKafkaListenerContainerFactory<String, ChannelCreatedEvent>
-                factory = new ConcurrentKafkaListenerContainerFactory<>();
+        ConcurrentKafkaListenerContainerFactory<String, ChannelCreatedEvent> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
 
         factory.setConsumerFactory(consumerFactory);
+        factory.setCommonErrorHandler(kafkaErrorHandler);
 
         return factory;
     }
