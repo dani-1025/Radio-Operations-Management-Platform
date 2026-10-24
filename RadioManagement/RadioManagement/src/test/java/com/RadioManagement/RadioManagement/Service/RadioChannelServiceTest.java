@@ -10,6 +10,7 @@ import com.RadioManagement.RadioManagement.Exception.ChannelNotFoundException;
 import com.RadioManagement.RadioManagement.Exception.DuplicateChannelException;
 import com.RadioManagement.RadioManagement.Repository.RadioChannelRepository;
 import com.RadioManagement.RadioManagement.Repository.RadioProgramRepository;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,10 +19,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,6 +58,11 @@ class RadioChannelServiceTest {
                     saved.setId(1L);
                     return saved;
                 });
+
+        when(kafkaTemplate.send(
+                eq("radio.channel.created"),
+                any(ChannelCreatedEvent.class)
+        )).thenReturn(CompletableFuture.completedFuture(null));
 
         radioChannelService.addChannel(request);
 

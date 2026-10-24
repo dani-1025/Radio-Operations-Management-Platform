@@ -35,6 +35,7 @@ public class RadioChannelService {
         this.kafkaTemplate = kafkaTemplate;
     }
 
+
     // Add channel
     @CacheEvict(value = {"channels", "channelSearch"}, allEntries = true)
     public void addChannel(AddChannelRequest request) {
@@ -59,8 +60,23 @@ public class RadioChannelService {
                 savedChannel.getFrequency()
         );
 
-        kafkaTemplate.send("radio.channel.created", event);
+        kafkaTemplate.send("radio.channel.created", event)
+                .whenComplete((result, exception) -> {
+                    if (exception != null) {
+                        System.err.println(
+                                "Failed to publish ChannelCreatedEvent for channel ID "
+                                        + savedChannel.getId() + ": "
+                                        + exception.getMessage()
+                        );
+                    } else {
+                        System.out.println(
+                                "Published ChannelCreatedEvent for channel ID "
+                                        + savedChannel.getId()
+                        );
+                    }
+                });
     }
+
 
     // Get all channels
     @Cacheable("channels")
